@@ -228,7 +228,7 @@ Q8. Spring profiles :
 
  
 
-Q9.
+Q9. 
  
 Q. how to stop spring/spring boot project gracefully?
 In Spring Boot, graceful shutdown is enabled using
