@@ -275,7 +275,68 @@ Isolation :
                                                                                   | `private`   | ❌ No              |
                                                                                   | `default`   | ❌ No              |
 
+Trasaction Manager :
+               - core component in transactions.
+               - responsible for managing transactions.
+               - it is an interface.
 
+
+Heirarcy of Transaction Manager :
+
+                          (interface)
+          .................................................
+          :           TransactionManager                  :
+          .................................................
+                              :
+                              :  extends
+                              :
+          .................................................                           3 Methods
+          :      PlatformTransactionManager               :                       :  --------------------- :
+          :              (INTERFACE)                      :---------------------> :   getTransaction()     : 
+          :  -------------------------------------------  :                       :   commit()             :
+                              :                                                   :   rollback()           :
+                              :                                                   ..........................
+                              :          
+                              :          
+                              :
+                              :  implemented by
+                              :
+          .................................................                    provides implementation of 
+          :  AbstractPlatformTransactionManager           :                  :  --------------------------  :
+          :            (ABSTRACT CLASS)                   :----------------> :   getTransaction()           :  
+          :  -------------------------------------------  :                  :   commit()                   :
+                              :                                              :   rollback()                 :
+                              : Concrete Classes                              ...............................
+        ------------------------------------------------------------
+          :                 :                 :                 :
+          :                 :                 :                 :
+  ..................  ..................  ..................  ..................
+  : DataSource      :  : Hibernate       :  : JPA             :  : JTA             :
+  : Transaction     :  : Transaction     :  : Transaction     :  : Transaction     :
+  : Manager         :  : Manager         :  : Manager         :  : Manager         :
+  : (CLASS)         :  : (CLASS)         :  : (CLASS)         :  : (CLASS)         :
+  ..................  ..................  ..................  ..................
+        :
+        : Extends
+        :
+..........................
+: JdbcTransactionManager :
+: (CLASS)                :  JdbcTransactionManager extends DataSourceTransactionManager and provides JDBC-specific, transaction handling, while DataSourceTransactionManager 
+:........................:  is the generic JDBC transaction manager.  Better support for: Exception translation, Declarative transactions.    
+
+
+Types of Transaction Manager :
+         there are two types majorly :
+                 - Declarative :
+                             - transaction management through annotation.
+                             - @Transactional.
+                             - spring boot will choose appropriate transaction manager.
+                             - we can create explicit transaction manager and tell spring to choose that.
+                 - Programmatic :
+                             -       START FROM 13 MINUTES.
+                             - 
+                             - 
+                             - 
 
 
                
