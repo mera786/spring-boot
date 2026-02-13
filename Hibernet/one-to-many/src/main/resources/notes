@@ -1,0 +1,134 @@
+                                                            ONE TO MANY
+
+🔹 Relationship between Entities?
+       - It defines how multiple entities are related to each other.
+       - At least 2 entities required.
+
+
+Q1. One-to-Many kya hota hai?
+        - Ek entity ka multiple records dusri entity se related hota hai.
+        - Lekin dusri entity ka sirf ek record pehli entity se related hota hai.
+👉 Simple Words:
+        - One Applicant → Many Applications
+        - Many Applications → One Applicant
+
+ ✅ Real-Time Examples
+          - Ek Applicant multiple Applications submit kar sakta hai.
+          - Ek Customer multiple Orders kar sakta hai.
+          - Ek Department me multiple Employees ho sakte hain.
+
+                      +-------------------------+                     +----------------------+
+                      |       Applicant         |                     |   Applicantions      |
+                      +-------------------------+  1                * +----------------------+
+                      | id          (PK)        |---------------------| id          (PK)     |
+                      | name                    |                     | status               |
+                      | email                   |                     | positions            |
+                      | mobile                  |                     | applicant_id (FK)    |
+                      | status                  |                     +----------------------+
+                      +-------------------------+
+
+
+🧭 One-to-Many Mapping ke Types :
+          1️⃣ Unidirectional One-to-Many
+              👉 Sirf Parent entity ko child ka reference pata hota hai.
+              Example:  Applicant  --->  Applications
+Applicant Entity (Parent) :
+---------------------------
+@Entity
+public class Applicant {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private String email;
+    private String mobile;
+
+    @OneToMany
+    @JoinColumn(name = "applicant_id") // FK in Applications table
+    private List<Application> applications;
+}
+Application Entity (Child) :
+----------------------------
+@Entity
+public class Application {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String status;
+    private String position;
+}
+👉 Yaha Application ko Applicant ka reference nahi pata.
+
+
+      2️⃣ Bidirectional One-to-Many :
+          👉 Dono entities ek dusre ko janti hain.
+          Example: Applicant  <---->  Applications
+
+Applicant Entity (Inverse Side) : Inverse Side = wo side jo relationship ko control (own) nahi karta.
+--------------------------------
+@Entity
+public class Applicant {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    @OneToMany(mappedBy = "applicant")
+    private List<Application> applications;
+}
+Application Entity (Owning Side) :
+----------------------------------
+@Entity
+public class Application {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String status;
+    private String position;
+
+    @ManyToOne
+    @JoinColumn(name = "applicant_id") // FK
+    private Applicant applicant;
+}
+
+📌 Owning Side vs Inverse Side :
+| Side         | Meaning                  |
+| ------------ | ------------------------ |
+| Owning Side  | Jis table me FK hota hai |
+| Inverse Side | mappedBy wala side       |
+👉 Foreign key always Owning Side me hota hai (Application table).
+
+
+🔹 Important Annotations :
+✅ @OneToMany
+         Parent side mapping ke liye.
+✅ @ManyToOne
+         Child side mapping ke liye.
+✅ @JoinColumn
+         Foreign key column create karta hai.
+✅ mappedBy
+         Batata hai ki FK dusri table me hai.
+
+🛑 Circular JSON Problem
+Bidirectional mapping me infinite recursion hota hai:  Applicant → Application → Applicant → Application ...
+Solution:
+@JsonIgnore  : Jis side pe lagaya → wo JSON me show hi nahi hoga
+or
+@JsonManagedReference
+@JsonBackReference
+
+| Annotation              | Kis Side Pe Lagate Hai?    | Meaning           |
+| ----------------------- | -------------------------- | ----------------- |
+| `@JsonManagedReference` | **Parent Side (One side)** | JSON me show hoga |
+| `@JsonBackReference`    | **Child Side (Many side)** | JSON me hide hoga |
+
+
+

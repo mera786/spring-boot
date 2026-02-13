@@ -1,0 +1,67 @@
+                                Stored Procedures  & Function
+
+Q1. What is Stored Procedures ?
+   It is a set of SQL Statments that are saved in the database and you can simply called it by name.
+
+
+ TO Practice Store Procedure use below query to for table and store procedure :
+
+  Table :
+                  INSERT INTO product (name, price, stock_quantity) VALUES
+                 ('Laptop', 55000, 10),
+                 ('Mobile Phone', 20000, 25),
+                 ('Keyboard', 800, 100),
+                 ('Mouse', 500, 150),
+                 ('Monitor', 12000, 20),
+                 ('Headphones', 1500, 60),
+                 ('Printer', 9000, 8),
+                 ('USB Cable', 200, 300),
+                 ('Power Bank', 2500, 40),
+                 ('Webcam', 3000, 15);
+
+ Store Procedure table :
+
+                 DELIMITER $$
+
+                 CREATE PROCEDURE update_stock(
+                 IN productId INT,
+                 IN quantity INT
+                 )
+                 BEGIN
+
+                              UPDATE product
+                              SET stock_quantity = stock_quantity - quantity
+                              WHERE id = productId;
+
+                 END $$
+
+                 DELIMITER ;
+
+
+
+
+Q2. What is Function ?
+   a function is similar to store procedure , but it is always return a value , you can not keep it void and it is usually for compute or calculation purpose.
+
+  Use same Product table
+
+
+  for function table  :
+
+                       DELIMITER $$
+
+                       CREATE FUNCTION get_product_total_value(productId INT)
+                       RETURNS DECIMAL(15,2)
+                       DETERMINISTIC
+                       BEGIN
+                           DECLARE totalValue DECIMAL(15,2);
+
+                           SELECT price * stock_quantity
+                           INTO totalValue
+                           FROM product
+                           WHERE id = productId;
+
+                           RETURN totalValue;
+                       END $$
+
+                       DELIMITER ;

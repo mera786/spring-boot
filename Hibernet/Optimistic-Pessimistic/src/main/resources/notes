@@ -1,0 +1,26 @@
+                                                             Optimistic and pessimistic locking are provided by JPA/Hibernate.
+
+1️⃣ Optimistic Locking kya hota hai?
+👉 Optimistic ka matlab = Assume karo conflict nahi hoga :
+                             - Database me lock nahi lagata.
+                             - Sirf update ke time check karta hai ki data kisi aur ne change to nahi kiya
+                             - Mostly Version column use karta hai.
+                             - Ex-> User A aur User B same record read kar rahe hain :
+                                                                     User A read version = 1
+                                                                     User B read version = 1
+
+                                                                   User A update → version becomes 2
+                                                                   User B update → FAIL (because version mismatch),Error: OptimisticLockException
+
+2️⃣ Pessimistic Locking kya hota hai?
+👉 Pessimistic ka matlab = Assume karo conflict zarur hoga :
+                             - Database me actual lock laga deta hai
+                             - Dusra user tab tak wait karega.
+                             - Ex-> User A record read kare:
+                                                          SELECT * FROM user FOR UPDATE;
+                                               ➡️ Ab User B update nahi kar sakta (wait karega)
+
+Note:- ye Concurrency Problem ko resolve krte hai Jab multiple users same data update karein. like,
+                                                                                                  Lost Update
+                                                                                                  Dirty Read
+                                                                                                  Inconsistent Data

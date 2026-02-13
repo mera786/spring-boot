@@ -1,0 +1,43 @@
+	                                              ONE-TO-ONE MAPPING
+
+ Relationship between Entities?
+- it defines the way they are related to each-other.
+- at least two entities are required.
+
+
+Q1. One-to-One ?
+- Ek entity ka sirf ek record dusri entity se related hota hai.
+- Aur dusri entity ka bhi sirf ek record pehle wali entity se related hota hai.
+- Real-Time Examples :
+                     1. Ek Applicant ka sirf ek Resume hota hai. / Ek Resume sirf ek Applicant ka hota hai.
+                     2. Ek person ka ek passport hota hai. / Ek passport sirf ek person ka hota hai.
+- One-to-One mapping 2 tarike se hoti hai:
+                                   - 👉 Unidirectional : Sirf ek entity ko dusri entity ka reference pata hota hai,Dusri entity ko kuch nahi pata hota.
+                                                        ex-  Applicant  --->  Resume
+                                                             @OneToOne
+                                                             @JoinColumn(name = "resume_id")
+                                                             private Resume resume;
+                                   - 👉 Bidirectional : Dono entities ek dusre ko janti hain,Reference dono side hota hai.
+                                                        ex-  Applicant <----> Resume
+                                                                        // Applicant (Inverse Side)
+                                                                           @OneToOne(mappedBy = "applicant")
+                                                                           private Resume resume;
+                                                                        // Resume (Owning Side)
+                                                                           @OneToOne
+                                                                           @JoinColumn(name = "applicant_id")
+                                                                           private Applicant applicant;
+Note:- Foreign key always exists in only one table, even in bidirectional mapping.
+
+                      +-------------------------+                     +----------------------+
+                      |       Applicant         |                     |        Resume        |
+                      +-------------------------+  1                1 +----------------------+
+                      | id          (PK)        |<------------------->| id          (PK)     |
+                      | name                    |                     | content              |
+                      | email                   |                     | applicant_id (FK)    |
+                      | mobile                  |                     +----------------------+
+                      | status                  |
+                      +-------------------------+
+
+@JoinColumn :- this annotation is used to add forein key in the class.
+
+@JsonIgnore :- it basically avoids circular json, like give json of applicant and then resume and stop now resume can't have json of applicant otherwise recursion start of json.

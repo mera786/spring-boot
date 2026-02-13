@@ -1,0 +1,119 @@
+                                                                         PROPAGATION :
+
+Q1. What is Transaction propagation ?
+   transaction propagation refers to how transactions behave when a method annotated with @Transactional is called by another method that may or may not have an active transaction.
+ In other words :
+        When one transactional method calls another method, what should happen to the transaction :
+                                                                                                - Should they share the same transaction.
+                                                                                                - Should a new transaction start.
+                                                                                                - Should the old transaction stop
+     Types of Propagation :
+                         - REQUIRED   : it is by default propagation, not define propagation then it will be picked.
+                                                            - If a transaction already exists → join it.
+                                                            - If no transaction exists → create a new one.
+                                                            - Real World Use Case :
+                                                                              You want to:
+                                                                                        - Save User.
+                                                                                        - Save Role Mapping
+                                                                                         Both must succeed or both must rollback.
+                         - SUPPORTS   :
+                                    - Propagation.SUPPORTS means the method will participate in an existing transaction if present; otherwise,it will execute without a transaction.
+                                    - Real World Use Case : Scenario: Read-Only Operations (User Profile, Reports) , You want:
+                                                                           - If called inside transaction → consistent data.
+                                                                           - If called normally → just read data without overhead
+                                                      👉 Reading data does not always need transaction (performance reason).
+                                      ❌ Problem with REQUIRED for Read APIs :
+                                                                            If you use REQUIRED:
+                                                                                            - It always opens a transaction.
+                                                                                            - DB lock + performance issue.
+                                                                                            - Unnecessary overhead.
+                                                                                     👉 SUPPORTS is lightweight.
+
+                         - MANDATORY  :
+                                      - Transaction MUST already exist. join it.
+                                      - If NO transaction exists → ❌ Exception throw karega : IllegalTransactionStateException
+                                      - Real World Use Case : Scenario: Payment + Order Confirmation :
+                                                                                                - Order must be created inside a transaction.
+                                                                                                - Payment processing must ALWAYS be called inside Order transaction.
+                                                                                                - Payment should NEVER run without transaction.
+                                                                                                - If someone calls payment service directly → ERROR
+                                                        Problem Without MANDATORY : If Payment service runs without transaction, Money deducted but order not saved (DATA INCONSISTENCY).
+
+                         - REQUIRES_NEW :
+                                      - Always starts a NEW transaction.
+                                      - If an existing transaction exists → it suspends it.
+                                      - Inner transaction commits/rollbacks independently.
+                                      - Real World Use Case :
+                                                          Scenario: User Registration + Audit Logging  :
+                                                                                                     You want to:
+                                                                                                             - Save User
+                                                                                                             - Save Role Mapping
+                                                                                                             - Save Audit Log (must always save even if user fails)
+                                                                 Note:- Problem with REQUIRED :
+                                                                                           - If user registration fails → audit log also rollback.
+                                                                                           - But audit logs should never rollback. That’s why we use REQUIRES_NEW.
+
+                         - NOT_SUPPORTED :
+                                       - Transaction ho to SUSPEND karo, aur method ko NON-transactional chalao.
+                                       - the method NEVER runs inside a transaction.
+                                     🔥 Real World Use Case :
+                                       - Scenario: Logging / File Upload / External API Call : You want:
+                                                                                       - Order save is transactional.
+                                                                                       - But logging or external API call should NOT be part of DB transaction
+                                                                                       - Even if order rollback → log should not rollback
+                                                                    👉 Because logging / API call is outside DB scope.
+                                        ❌ Problem Without NOT_SUPPORTED
+                                                                  If you use REQUIRED:
+                                                                                  - Logging will rollback when main transaction fails
+                                                                                  - External API call may cause long DB locks
+                                                                         👉 Very BAD in production.
+                         - NEVER :
+                                - Method must NOT run inside a transaction.
+                                - Agar transaction mila → ❌ Exception throw karega. IllegalTransactionStateException.
+                            🔥 Real World Use Case :
+                                                 Scenario: Read-Only Reporting / External System Call, You want:
+                                                                                              - Some method must NEVER run inside DB transaction.
+                                                                                              - Because it is heavy reporting or external call.
+                                                                                              - Transaction may cause DB locks or performance issue.
+                                                       ❌ Problem Without NEVER
+                                                         If you accidentally call reporting inside transaction:
+                                                                                                  - Long-running query
+                                                                                                  - DB locks
+                                                                                                  - Transaction timeout
+                                                                                                  - Performance crash
+                                                                                       👉 So you force NEVER.
+
+
+                         - NESTED : Parent transaction ke andar ek sub-transaction (SAVEPOINT) banana :
+                                                                                       - Parent transaction chal rha hota hai.
+                                                                                       - Spring ek savepoint create karta hai.
+                                                                                       - Agar nested method fail ho jaye → sirf nested rollback.
+                                                                                       - Parent transaction continue karega.
+                                        DIFFERENCE BETWEEN NESTED and REQUIRES_NEW :
+                                                | Feature           | NESTED              | REQUIRES_NEW                |
+                                                | ----------------- | ------------------- | --------------------------- |
+                                                | New transaction?  | ❌ No (Same TX)     | ✅ Yes                     |
+                                                | Savepoint?        | ✅ Yes              | ❌ No                      |
+                                                | Parent suspend?   | ❌ No               | ✅ Yes                     |
+                                                | Child fail impact | Only child rollback | Independent commit/rollback |
+                                                                        Note:- NESTED = savepoint based rollback, REQUIRES_NEW = completely separate transaction.
+                        Real World Use Case :
+                                        Banking Scenario,You want to:
+                                                                - Deduct account balance (main TX).
+                                                                - Add reward points (nested)
+                                                                - Send SMS (nested)
+                                                            If reward points fail → still deduct money,But reward rollback should happen
+
+
+🧠 SUPER SENIOR ARCHITECT LEVEL CHEAT TABLE :
+
+| Feature                      | Propagation   |
+| ---------------------------- | ------------- |
+| Core business logic          | REQUIRED      |
+| Audit / Logging              | REQUIRES_NEW  |
+| Payment logs                 | REQUIRES_NEW  |
+| Read-only APIs               | SUPPORTS      |
+| Payment core deduction       | MANDATORY     |
+| Kafka / Email / External API | NOT_SUPPORTED |
+| Health check / Monitoring    | NEVER         |
+| Partial rollback             | NESTED        |

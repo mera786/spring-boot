@@ -1,0 +1,157 @@
+                                      MANY TO MANY MAPPING
+
+
+🔹 Relationship between Entities?
+     - It defines how multiple entities are related to each other.
+     - At least 2 entities required.
+
+Many-to-Many kya hota hai?
+   - Ek entity ke multiple records dusri entity se related hote hain.
+   - Aur dusri entity ke bhi multiple records pehli entity se related hote hain.
+Simple Words
+👉 Many Applicants → Many Jobs
+👉 Many Jobs → Many Applicants
+
+
+Real-Time Examples
+      - Ek Student multiple Courses kar sakta hai, aur ek Course me multiple Students hote hain.
+      - Ek User multiple Roles le sakta hai, aur ek Role multiple Users ko mil sakta hai.
+      - Ek Applicant multiple Jobs apply kar sakta hai, aur ek Job multiple Applicants ko mil sakta hai.
+
+Many-to-Many Diagram :
+
+                 MANY TO MANY
+
+      +----------------------+        +----------------------+
+      |      Applicant        |        |        Jobs          |
+      +----------------------+        +----------------------+
+      | id (PK)               |        | id (PK)               |
+      | name                  |        | title                 |
+      | email                 |        | company               |
+      | mobile                |        | location              |
+      +----------------------+        +----------------------+
+                *  ----------------------  *
+                           |
+                           |
+                +---------------------------+
+                |     applicant_jobs        |
+                +---------------------------+
+                | applicant_id (FK)          |
+                | job_id (FK)                |
+                +---------------------------+
+👉 Many-to-Many me 3rd table mandatory hoti hai (Join Table).
+
+
+🧭 Many-to-Many Mapping Types :
+      1️⃣ Unidirectional Many-to-Many
+      👉 Sirf ek entity ko dusri entity ka reference pata hota hai.
+
+👤 Applicant Entity :
+---------------------
+@Entity
+public class Applicant {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    @ManyToMany
+    @JoinTable(
+        name = "applicant_jobs",
+        joinColumns = @JoinColumn(name = "applicant_id"),
+        inverseJoinColumns = @JoinColumn(name = "job_id")
+    )
+    private List<Job> jobs;
+}
+
+💼 Job Entity :
+---------------
+@Entity
+public class Job {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+}
+👉 Job ko Applicant ka reference nahi pata.
+
+
+        2️⃣ Bidirectional Many-to-Many
+        👉 Dono entities ek dusre ko janti hain.
+
+👤 Applicant Entity (Owning Side) :
+-----------------------------------
+@Entity
+public class Applicant {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    @ManyToMany
+    @JoinTable(
+        name = "applicant_jobs",
+        joinColumns = @JoinColumn(name = "applicant_id"),
+        inverseJoinColumns = @JoinColumn(name = "job_id")
+    )
+    private List<Job> jobs;
+}
+
+💼 Job Entity (Inverse Side) :
+------------------------------
+@Entity
+public class Job {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+
+    @ManyToMany(mappedBy = "jobs")
+    private List<Applicant> applicants;
+}
+
+📌 Owning Side vs Inverse Side :
+| Side         | Meaning                     |
+| ------------ | --------------------------- |
+| Owning Side  | Join Table create karta hai |
+| Inverse Side | mappedBy wala side          |
+👉 Join table Owning Side decide karta hai.
+
+🔹 Important Annotations :
+✅ @ManyToMany
+    Many-to-Many relationship define karta hai.
+✅ @JoinTable
+    Join table create karta hai.
+✅ joinColumns
+    Current entity ka FK.
+✅ inverseJoinColumns
+    Other entity ka FK.
+✅ mappedBy
+    Inverse side batata hai.
+
+
+🚨 Circular JSON Problem (Many-to-Many) :
+        Applicant → Job → Applicant → Job → ...
+Solution:
+       @JsonManagedReference
+       @JsonBackReference
+            or
+       @JsonIgnore
+
+🔥 Interview Tip (Very Important) :
+👉 Many-to-Many mapping internally 2 One-to-Many mappings hoti hai with a join table.
+
+
+
+
+
+
+

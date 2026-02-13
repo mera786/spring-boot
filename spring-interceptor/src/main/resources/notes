@@ -1,0 +1,87 @@
+What are Interceptors?
+- Interceptor ek aisa component hota hai jo request aur response ke beech me aakar kuch extra processing karta hai — bina main business logic ko disturb kiye.
+- even before controller get called. not like, Spring-Aop because Aop comes after controller.
+Simple words me:
+          Client → Interceptor → Controller → Interceptor → Client
+
+🔹 In Spring Boot (MVC) Context
+              - Spring Boot me Interceptor ka use HTTP request ko handle karne se pehle ya baad me kuch kaam karne ke liye hota hai.
+              - Ye HandlerInterceptor interface implement karta hai.
+
+🔹 Interceptor Flow Diagram :
+
+                                 Client Request
+                                        .
+                                        .
+                                        v
+                                 +----------------------+
+                                 |  Dispatcher Servlet  |
+                                 +----------------------+
+                                        .
+                                        .
+                                        v
+                                 +----------------------+
+                                 |     Interceptor      |
+                                 +----------------------+
+                                        .
+                                        .
+                                        v
+                                   ..............................
+                                   .              .             .
+                                   v              v             v
+                                +------------+ +------------+ +------------+
+                                | Controller1| | Controller2| | Controller3|
+                                +------------+ +------------+ +------------+
+                                                 .
+                                                 .
+                                                 v
+                                        (Response back same path)
+
+🔹 Real Use Cases :
+   ✅ Logging (request log karna)
+   ✅ Authentication check
+   ✅ Authorization
+   ✅ Request time calculate karna
+   ✅ Global header add karna
+
+🔹 What is HandlerInterceptor in Spring Boot?
+  - HandlerInterceptor Spring MVC ka ek interface hai jo request ko Controller tak pahunchne se pehle aur Controller ke baad intercept (rok kar process) karne ke liye use hota hai.
+  - Ye mostly logging, authentication, authorization, timing, etc. ke liye use hota hai.
+  - Spring me ye interface available hota hai:
+                                👉 org.springframework.web.servlet.HandlerInterceptor
+🔹 HandlerInterceptor ke 3 Important Methods :
+1️⃣ preHandle() :
+           - Controller execute hone se pehle chalta hai
+           - Agar true return kare → request controller tak jayegi
+           - Agar false return kare → request wahi ruk jayegi
+👉 Mostly authentication ke liye use hota hai.
+2️⃣ postHandle() :
+           - Controller method execute hone ke baad
+           - Response client ko bhejne se pehle
+👉 Mostly response modify karne ya logging ke liye
+3️⃣ afterCompletion() :
+           - Request completely complete hone ke baad
+           - Exception aayi ho tab bhi chalega
+👉 Cleanup work ke liye.
+
+✅ WebMvcConfigurer kya hota hai?
+WebMvcConfigurer Spring MVC ka ek interface hai jo aapko default MVC configuration ko customize karne ka option deta hai,
+jisme default methods hote hain jinko override karke aap Spring MVC ka behavior customize kar sakte ho.
+Yeh normally use hota hai:
+      - CORS configuration ke liye
+      - Custom Interceptor add karne ke liye
+      - Resource handler configure karne ke liye
+      - Message converters customize karne ke liye
+      - View resolvers configure karne ke liye
+👉 in it , there is a method called, public void addInterceptors(InterceptorRegistry registry) , it help us to register
+our interceptor into Spring MVC DispatcherServlet ke request processing chain me.
+
+🔹 Interceptor vs Filter (Important Difference) :
+| Feature  | Interceptor          | Filter                     |
+| -------- | -------------------- | -------------------------- |
+| Part of  | Spring MVC           | Servlet API                |
+| Works on | Handler level        | Servlet level              |
+| Use case | Business-level logic | Generic request processing |
+| Example  | Auth check           | CORS, Encoding             |
+👉 Filter servlet container level pe kaam karta hai
+👉 Interceptor Spring MVC level pe kaam karta hai

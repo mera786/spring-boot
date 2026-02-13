@@ -1,0 +1,139 @@
+                                                        JPA
+
+      JDBC : Java Database Connection
+
+     Connect to DB in & Steps
+   1. Load The JDBC Driver.
+                 ex - Class.forName("com.mysql.cj.jdbc.Driver");
+   2. Establish a Connection.
+                 ex - Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/testdb","root","root");
+   3. Create a SQL Query.
+                 ex - String sql = "INSERT INTO student(name, age) VALUES (?, ?)";
+   4. Prepare the Statement
+                 ex - PreparedStatement ps = con.prepareStatement(sql);
+                       5. set Parameters
+                                 ex- ps.setString(1, "Meraz"); ps.setInt(2, 25);
+                       6. execute the query.
+                                 ex- ps.executeUpdate();
+
+
+
+JPA Architecture  :
+
+                                                                                       ---------------------                                   -------------------------------------
+                                                                                      | Persistence Context | <--------------------            |   Persistence/ Persistence unit   |
+                                                                                       ----------------------                        \          ------------------------------------
+                                                                                                                                      \                          |
+                                                                                                                                    interacts                    | creates
+                                                                                                                                          \                      v
+                                                                                                                                            \       -----------------------
+                                                                                                                                              \     | EntityManagerFactory |
+                                                                                                                                                \  ------------------------
+                                                                                                                                                 \             |
+                                                                                                                                                   \           | creates
+                                                                                                ---------------------                                \         v
+                                                                                                |  Entity Transaction |<--------------------|           \-------------------
+                                                                                                ----------------------                      |-----------| Entity Manager  |
+                                                          Database <-------------------------    ---------------------                      | creates    -------------------
+                                                                                                |        Query        |<--------------------                    |
+                                                                                                ----------------------                                          | manages
+                                                                                                                                                                v
+                                                                                                                                                          ------------
+                                                                                                                                                          |  Entity   |
+                                                                                                                                                          -------------
+
+
+
+Note:
+EntityManagerFactory emf = Persistence.createEntityManagerFactory("myPersistenceUnit"); // "myPersistenceUnit" = persistence.xml me diya hua name
+
+EntityManager em = emf.createEntityManager();
+
+        em.getTransaction().begin();
+
+        Student s = new Student();
+        s.setName("Meraz");
+        s.setAge(25);
+
+        em.persist(s);
+        em.getTransaction().commit();
+
+        em.close();
+        emf.close();
+
+
+
+ Entity Lifecycle  :
+
+
+                                                                       -----------------
+                                                                       |   REMOVED    |-------------------|
+                                                                       -----------------                  |  flush()
+                                                                            ^     |                       |
+                                                                            |     |                       |
+                                                                 persist()  |     | remove()              |                    |------------------------|
+                                                                            |     |                       |...................>|                        |
+                                                                            |     v                flush()                     |      DATABASE          |
+                             -----------------       persist()       -----------------   ------------------------------------->|                        |
+                             |   TRANSIENT    | ------------------->|    MANAGED     |   <-------------------------------------|                        |
+                             -----------------                       -----------------              find()                     |........................|
+                                                                          ^    |
+                                                                          |    |  detach()
+                                                                 merge()  |    |  close()
+                                                                          |    |  clear()
+                                                                          |    v
+                                                                    -----------------
+                                                                    |   DETACHED    |
+                                                                    -----------------
+
+
+
+Note:
+JPA Entity Lifecycle me basically 4 main states hoti hain.
+
+1️⃣ Transient
+        - Entity new object hota hai, DB me nahi hota, JPA ko pata bhi nahi.
+        - ex : Student s = new Student(); // Transient
+
+2️⃣ Managed (Persistent)
+        - Entity Persistence Context ke under hota hai (JPA track karta hai).
+        - Changes automatic DB me flush ho sakte hain.
+        - ex :  em.persist(s); // Now Managed
+
+3️⃣ Detached
+        - Entity pehle managed tha, but EntityManager se disconnect ho gaya.
+        - ex : em.detach(s);
+               em.close();
+
+4️⃣ Removed
+       - Entity ko delete ke liye mark kar diya.
+       - ex : em.remove(s); // Removed
+
+
+
+Q. Types of Repositories used in spring/spring boot provided by JPA
+    - CrudRepository
+           |
+           v
+    - PagingAndSortingRepository
+           |
+           v
+    - JpaRepository
+Note: all are interfaces but these are older and new version is : ListCrudRepository and ListPagingAndSortingRepository.
+
+
+
+
+
+Q. Difference between CrudRepository, JpaRepository and  PagingAndSortingRepository?
+
+.-----------------------------------------------------------------------------------.
+| Feature                | CrudRepository | PagingAndSortingRepo   |  JpaRepository |
+|------------------------|----------------|------------------------|----------------|
+| Basic CRUD Operations  |     🟢✔       |         🔴✖           |     🟢✔       |
+| Pagination             |     🔴✖       |         🟢✔           |     🟢✔       |
+| Sorting                |     🔴✖       |         🟢✔           |     🟢✔       |
+| JPA-Specific Methods   |     🔴✖       |         🔴✖           |     🟢✔       |
+| Custom Query Methods   |     🔴✖       |         🔴✖           |     🟢✔       |
+| Batch Operations       |     🔴✖       |         🔴✖           |     🟢✔       |
+'-----------------------------------------------------------------------------------'

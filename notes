@@ -1,0 +1,1231 @@
+ 
+
+Q. How spring boot calls externals APi ?
+There are 4 major built-in approaches in spring boot :
+  a. RestTemplate :
+               - introduced in spring 3.0
+               - used heavily till spring boot 2.x
+               - deprecated (not removed) from spring 5+
+               - simple & synchronous
+               - still found in 90% enterprises code bases.
+               - thread waits until API response Arrive.
+  b. WebClient :
+               - introduced in spring 5.0
+               - recommended approach
+               - non blocking
+               - reactive (uses project reactor)
+  c. RestClient :
+               - introduced in spring 6.1
+               - preferred blocking client
+               - designed for spring boot 4
+               - modern and fluent API
+               - replaces RestTemplate officially.
+  d. HttpExchange :
+               - declarative approach
+               - introduced in spring framework 6
+               - similar to feign but spring native
+               - clean and readable
+               - uses webclient internally.
+
+
+
+Q1. Layerd Architecture ?
+   
+                               +----------+       +----------+        +----------+     +----------+
+                               |  DTO     |       |  Utility |        |  Entity  |     |  Config  |
+                               +----------+       +----------+        +----------+     +----------+          
+                                     ↑                ↑                    ↑               ↑
+                               +--------------------------------------------------------------------+
++----------+                   |  +--------------------+  +-----------------+  +------------------+  |
+|  Client  |------------------>|  |  Controller Layer  |  |  Service Layer  |  | Repository Layer |  |
++----------+                   |  +--------------------+  +-----------------+  +-------|----------+  |
+                               +-------------------------------------------------------|-------------+
+                                                                                       |
+                                                                                       |
+                                                                                       |
+                                                                   +----------+        |
+                                                                   |  DB      |  ←------
+                                                                   +----------+
+
+
+Q2. UnderStanding Beans and ApplicationContext ?
+     a. What is bean ?
+     Bean is nothing but java object , when you java object is managed by spring ioc called bean.
+
+   b. Spring Ioc container ?
+      bean life cycle is manged by Spring ioc container like, bean creation, bean injection, bean deletion everything will be handle by the spring ioc container.
+      spring ioc container is a kind of terminology when it comes to actual implementation then spring ioc container implementation will be Application context. or beanfactory..etc.
+
+   c. How to create Beans ?
+      there are 2 ways :
+        1. using @Component even other sterotype annotation eventually those also internally use @Component
+        2. @Configuration @Bean
+
+
+    d. How to check if the beans are present in application ?
+         1. using actuator
+         2. using object of application context.
+
+
+
+Q3. dependency injection ?
+
+Why  ?
+ - suppose order is a class and it's bean simply creating in user that's fine. but what if in feature order class converted into order interface then it's bean can't be created, however
+   if i have online-order class which can be implement order interface then it's in user class Order order = new OnlineOrder(); can be created but it breaks one solid principle
+   dependency inversion rule of SOLID principle which say don't dependend on concrete implementation , rather dependens on abstraction, that's the reason for dependency injection
+   comes into picture.
+Types :
+there are 3 types :
+ a. Field injection
+ b. setter injection
+ c. constructor injection
+
+ a. Field injection : 
+        - dependency is set into fields of class
+        - advantage : simple and easy to use.
+        disadvantage : 
+                   - can't be used with immutable fields.
+                   - changes of getting null pointer exception (NPE).
+b. setter injection :
+        - dependency is set using setter of field. and annotate setter method with @Autowired.
+        - advantage : dependency can be changes any time after object creation. easy for junit testing becoz we can pass mock object in dependency easily.
+        disadvantage : 
+                   - field can't be marked as final.
+                   - dificult to read and maintained as per standard.
+ c. constructor injection :
+                    - dependency will be resolved at the time of intialization of object 
+                    - it is recommended.
+                    - when 1 constructor is present , @Autowired is not mandatory. if more than 1 constructor then mandatory to use @Autowired
+                    - advantage : 
+                               - all mandatory dependencies will be injected at the time of intialization itself.
+                               - makes 100 percent sure that our object will be initialized with all the required dependencies.
+                               - Avoid NPE
+                               - we can create immutable objects using constructor injection.
+                               - fail fast - fail at compilation only in case of missing dependencies.
+
+What all problem faced during DI?
+ a. Circular Dependency inject :
+                       - it can be resolve using @Lazy and @PostConstruct
+ b. unsatisfied dependency :
+                       - Unsatisfied Dependency occurs when Spring cannot inject a dependency because no matching bean or multiple ambiguous beans are found.
+                       - Common Causes:
+                                    - Bean not created (@Component / @Service missing)
+                                    - Package not scanned
+                                    - Multiple implementations of an interface
+                                    - Wrong bean name
+                       - Resolution:
+                                    - Ensure bean is annotated properly (@Component, @Service, @Repository)
+                                    - Fix component scanning (@ComponentScan)
+                                    - Use @Qualifier to specify exact bean
+                                    - Use @Primary to mark default bean
+                                    - Check correct package structure.
+
+
+Q4. ComponentScan :
+
+  what ?
+    - @ComponentScan is a Spring annotation used to tell Spring where to search for beans/components.
+    - It enables automatic detection of classes annotated with @Component, @Service, @Repository, @Controller, etc.
+    - It works during classpath scanning, registering detected classes into the Spring IoC container.
+  use ?
+    - To avoid manual bean configuration in XML or Java config.
+    - To organize code in multiple packages and still allow Spring to detect beans.
+    - @ComponentScan should be used along with @Configuration annotation.
+  componentScan arguments ?
+               - basePackage :
+                         - Specifies which packages Spring should scan to find components.
+                         - @ComponentScan(basePackages = {"com.app.service", "com.app.repository"})
+                         - Spring will scan only these packages and their subpackages.
+               - excludeFilters : 
+                         - Tells Spring which components NOT to register as beans during scanning.
+                         - You want to exclude specific classes, Or exclude annotations, for example @Controller.
+                         - ex :   excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = Controller.class)  / 
+                                                                  excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = TestService.class)
+
+
+Q5. Customizing Bean Nature ?
+
+
+ Bean lifeCycle :
+                    
+                                +----------------------+ 
+                                | Businees Object(PoJo) |
+                                +----------------------+ 
+                                           |
+                                           |
+                                           v
+                            |-------------------------------|
+                            |                               |
++--------------------+      |   +-----------------------+   |       
+| Configuration       |     |   | IOC Container Started |   |
+| Metadata(annotation)|---->|   +-----------------------+   |                               
++--------------------+      |     +----------------+        |                                     
+                            |     | Bean Creation  |        |                                                                   
+                            |     +----------------+        |                                                                 
+                            |    +----------------------+   | 
+                            |    | Dependency Injection |   |                
+                            |    +----------------------+   |
+                            +-------------------------------+   
+                                            |
+                                            |
+                                            v
+                                 +---------------------+            
+                                 |custom Action        |   InitializationBean/@PostConstruct
+                                 | after Bean creation |                                                                 
+                                 +---------------------+                                        
+                                            |
+                                            |
+                                            v 
+                                 +---------------------+      +-----------------------------------+       +----------------+        +------------------+ 
+                                 | ready to use system |----> | custom action before destroy Bean | ----> | Bean destroyed | ---->  | Application stop | 
+                                 +---------------------+      +-----------------------------------+       +----------------+        +------------------+         
+                                                                     DisposableBean/@PreDestroy
+what are custom actions while bean creation ?
+   - let the bean perform certain actions upon intialization and destruction of your beans.
+   - perfrom action after bean creation.
+   - perfrom action before destroying bean.
+
+ Interfaces to customize bean nature ?
+  a. InitializationBean : implement this interface for custom Action after bean creation.
+  b. DisposableBean  :  implement this interface for custom action before destroy Bean
+Note: in modern way instead of InitializationBean use @PostConstruct and instead of DisposableBean use @PreDestroy
+
+
+Q6. Spring Bean Scope :
+
+  when beans will get created ?
+                                    +---------------+
+                                    | Bean Creation |
+                                    +---------------+
+                                          |
+                                          |
+                                          v
+                       |------------------|--------------------------|
+                       |                                             |
+             +----------------------+                       +----------------------+
+             | Eager Initialization |                       | lazy Initialization  |
+             +----------------------+                       +----------------------+
+- when we start the application                           - when beans are needed.
+- eg beans with singleton scope                           - eg beans with prototype or session
+                                                          - @Lazy annotation
+
+
+scope of beans ?
+   - How long a bean lives and how many times Spring creates it.
+   - there are 4 types :
+            - SingleTon : 
+                    - only one instance of the bean is created, and the same instance is reused everywhere it is injected.
+                    - Default scope in Spring is Singleton (even if you don’t mention @Scope("singleton").
+                    - it support eager intialization.
+            - Prototype :
+                    - each time new objected.
+                    - lazily intialized : new object is created each time. when needed.
+Request (Web scope)
+Session (Web scope)
+
+
+
+Q7. @ConditionalOnProperty annotations :
+
+    what is ConditionalOnProperty ?
+                - bean is created conditionally.
+
+    scinario :
+           - we want to create only one bean. either MysqlConnection class bean or NoSqlConnection class bean.
+           - we have 2 components sharing same db, but 1 need MysqlConnection and other need NoSqlConnection.
+   ex -
+@Component
+@ConditionalOnProperty(prefix = "sqlconnection",
+        value = "enabled",
+        havingValue = "true",
+        matchIfMissing = false)
+public class MysqlConnection {}
+Note:- 
+in properties file : sqlconnection.enabled=false
+
+
+Q8. Spring profiles :
+
+  how to configure profile configuration dynamically ? becoz in production we can't open yml file and change.
+         there are 2 ways :
+                     - 1 while application start up using command
+                     - mvn spring-boot:run -Dspring-boot.run.profiles=prod                     
+              
+                    - another one is : add profile in pom.xml
+                    - and run using mvn spring-boot:run -<Pproduction it is a id in pom.xml file provided id>
+ @Profile annotation :
+      using profile annotation we can tell spring boot, to create a bean only when particular profile is set.
+
+ 
+
+Q9.                                                    UNIT TESTING 
+
+
+Q1. What is Unit test ?
+A unit test is a way to test the smallest parts of your code, such as indivisual methods or classes, to ensure they work as expected.
+
+Q2. Why unit testing is important ?
+- fast feedback : unit test are quick to run and can immediately tell you if something is broken.
+- Early bug detection:  catch bug at the method level before they propagate.
+- Easier to maintain : they help to ensure future changes don't break existing functionality.
+- increase confidence : you can refector your code with the confidence that everything still works.
+
+
+Q3. What does @Test annotation do in JUnit?
+@Test is used to mark a method as a test method in JUnit.When JUnit runs the test class, it automatically executes,No need to call the method manually — JUnit detects and runs it.
+
+
+Q4. Difference between Unit Testing and Integration Testing?
+  - Unit Testing → test single component, dependencies are mocked.
+  - Integration Testing → test multiple components working together.
+
+
+Q1. What is JUnit?
+👉 JUnit is a testing framework in Java for writing unit tests. 
+Note: we should perform -ve and +ve testing both
+
+Q2. Which version of JUnit does Spring Boot use?
+👉 JUnit 5 (Jupiter) by default.
+
+Q. Useful annotations in test life cycle  ?
+
+                           ┌--------------┐         ┌--------------┐         ┌--------------┐                
+                           |  @BeforeAll  |         |  @BeforeEach |         |   @Test      |        
+                           | Class level  | . . . .>| Setup for    | . . . .>|test execution|
+                           |    Setup     |         |  each test   |         |              |      
+                           └--------------┘         └--------------┘         └--------------┘    
+                                                                                     |
+                                                                                     |
+                                                                                     |
+                 ┌--------------┐              ┌--------------┐                      |
+                 |  @AfterEach  |              | @AfterAll    |                      |
+                 |    Cleanup   |<-------------|Class Cleanup |<---------------------┘ 
+                 |              |              |              |
+                 └--------------┘              └--------------┘
+        
+
+- @BeforeAll :
+    - It is class level setup.
+    - It runs only once before all test methods.
+    - Purpose: Jo cheez saare test cases me common ho aur baar-baar run karna costly ho, like:
+        - Database connection setup karna
+        - Test environment initialize karna
+        - Static resources load karna
+        - Common configuration set karna
+        - Starting external services (Testcontainers, servers, etc.)
+
+
+- @BeforeEach :
+    - It is method level setup.
+    - It executes before each test method.
+    - Purpose:
+        - Har test ke liye fresh state create karna
+        - Test data initialize/reset karna
+        - Objects re-create karna (to avoid shared state)
+        - Mock setup for each test
+        - Clean environment ensure karna taaki tests independent ho
+
+
+- @AfterEach :
+    - It is method level cleanup.
+    - It executes after each test method.
+    - Purpose:
+        - Har test ke baad cleanup karna
+        - Test data reset/delete karna
+        - Resources release karna (files, DB connections, mocks)
+        - Temporary objects destroy karna
+        - Ensure next test starts with clean state
+
+
+
+- @AfterAll :
+    - It is class level cleanup.
+    - It executes once after all test methods are executed.
+    - Purpose:
+        - Global resources close karna
+        - Database connection close karna
+        - Test containers / servers stop karna
+        - Static resources release karna
+        - Final cleanup after all tests complete
+
+
+Q. doNothing() Mockito me kis case me use hota hai?
+ - Jab method void return type ka ho aur tum chahte ho ki real method execute na ho. 
+                                                                          - ex :=> doNothing().when(productRepository).deleteById(1);
+ - Method call hua ya nahi, kitni baar hua, kis argument ke saath hua. check krne ke liye use krte hai : 
+                                                                                               - Kitni Baar Call Hua:=>  verify(emailService, times(2)).sendEmail();
+                                                                                               - Verify Never Called:=>   verify(emailService, never()).sendEmail();
+                        
+
+Q3. some few annotations used in JUnit ?
+-  @Disabled → disable a test
+-  @DisplayName → give custom test name
+
+
+
+Q. What is Java Reflection?
+Reflection is a Java feature that allows you to inspect and modify classes, methods, fields, and constructors at runtime.
+Simple words:
+➡️ Java ka ability to look inside a class and access private things dynamically at runtime.
+
+
+Q4. How do you test exceptions in JUnit?
+assertThrows(RuntimeException.class, () -> {
+    productService.addProduct(product);
+});
+
+
+Q5. Difference between JUnit 4 and JUnit 5?
+- JUnit 4 → @Before, @After, @BeforeClass, @AfterClass
+- JUnit 5 → @BeforeEach, @AfterEach, @BeforeAll, @AfterAll
+- JUnit 5 modular + supports Java 8 features
+
+
+
+
+
+
+
+
+🔹 4. Mockito (Mocking Framework)  :
+--------------------------------------
+
+Q1. What is Mockito?
+👉 Mockito is a framework used to create mock objects for dependencies, so you can test a class in isolation.
+
+Q2. Why do we use Mockito in unit testing?
+👉 To avoid hitting real DB, API, or external systems → only test business logic.
+
+Q3. Difference between @Mock and @InjectMocks?
+- @Mock → creates mock objects.
+- @InjectMocks → @InjectMocks is used to create the class under test and inject the mocked dependencies into it automatically.
+
+Q4. Difference between mock() and spy()?
+- mock() → fake object (all methods return defaults unless stubbed).
+- spy() → wraps real object (can call real methods).
+
+Q5. How do you verify interactions/verify() used for, in Mockito?
+verify(userRepository, times(1)).save(any(User.class));
+
+Q6. How do you mock static methods?
+👉 From Mockito 3.4+ using mockStatic().
+
+Q7. Difference between @Mock and @MockBean?
+- @Mock → pure Mockito mock. (The mock object is created only by Mockito,Spring doesn’t know about it)
+- @MockBean → Also creates a mock object using Mockito,but registers it inside the Spring ApplicationContext.
+
+
+Q8. What happens if you forget @ExtendWith(MockitoExtension.class)?
+If you forget @ExtendWith(MockitoExtension.class), Mockito annotations won’t work, mocks won’t be initialized, and you’ll face NullPointerException.
+
+
+
+Q10. Difference between Field Injection vs Constructor Injection in Tests ?
+Field injection (@InjectMocks) is simpler but hides dependencies, while constructor injection is explicit, encourages better design, and is generally preferred for production code.
+
+
+Q11. Difference between @WebMvcTest, @ExtendWith(MockitoExtension.class) and @SpringBootTest ?
+@ExtendWith(MockitoExtension.class) :
+- Scope → Pure unit testing (isolated class).
+- Usage → Used when you want to test only a single class (like a service) with mocked dependencies.
+- What it provides → Enables Mockito annotations like @Mock, @InjectMocks.
+- Spring Context → ❌ Does not load the Spring ApplicationContext. Tests run faster.
+- Example Use Case → Testing UserService in isolation with a mocked UserRepository.
+@WebMvcTest :
+- Scope → Focused slice testing for the web layer (controllers).
+- Usage → Used when you want to test Spring MVC controllers (request mappings, JSON response, validation).
+- What it provides → Loads only web-related beans (@Controller, @ControllerAdvice, @JsonComponent) into the Spring context. but Repositories and services need to be mocked manually (@MockBean).
+- Spring Context → ✅ Loads a lightweight Spring context but only for the web layer (not full application).
+- Example Use Case → Testing UserController endpoints with MockMvc.
+@SpringBootTest :
+- Purpose → Integration test (loads the entire application context).
+- Spring Context → ✅ Loads full Spring Boot context (all beans, configs, DB connections, etc.).
+- Mocks → You can still use @MockBean, but usually real beans are loaded.
+- Speed → Slowest (full app context + DB/API setup if not mocked).
+- Best For → End-to-end testing of the application, verifying beans, DB integration, API calls.
+- Example → Testing UserController + UserService + UserRepository together with real DB (H2/MySQL).
+
+Q12. What is MockMvc ?
+
+-> MockMvc is a Spring class used for testing your controllers without actually starting a real HTTP server (like Tomcat).
+-> it simulate HTTP requests (GET, POST, PUT, etc.) and check the response (status code, headers, JSON body).
+-> Think of it like a fake Postman inside your JUnit test.
+
+
+
+
+
+🔹 5. JaCoCo (Code Coverage Tool) :
+------------------------------------
+
+Q1. What is JaCoCo?
+👉 JaCoCo is a Java Code Coverage tool that measures how much code is executed during tests.
+👉 It works as plugin with Junit
+👉 Often required for CI/CD quality gates (e.g., "Fail build if coverage < 80%").
+
+Q2. Types of coverage provided by JaCoCo?
+- Line coverage
+- Branch coverage
+- Instruction coverage
+
+Q3. How to configure JaCoCo in Maven?
+👉 Add jacoco-maven-plugin in pom.xml.
+
+Q4. What is a good coverage percentage?
+👉 Around 70–80%, but quality of tests is more important.
+
+Q5. Can JaCoCo measure test quality?
+👉 No, only test coverage (lines executed). Correctness depends on assertions.
+
+Q6. In a JaCoCo report, what do the different colors represent?
+| **Color**          | **Meaning**                                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| 🟢 **Green**       | **Fully covered** → All instructions/branches in that line are executed during tests.                               |
+| 🟡 **Yellow**      | **Partially covered** → Some instructions/branches executed, but not all. (e.g., `if-else` only one branch tested). |
+| 🔴 **Red**         | **Not covered** → No test has executed that line of code.                                                           |
+
+Q7. What if you don’t want JaCoCo to include certain classes in coverage?
+Sometimes we exclude certain classes or packages from JaCoCo coverage — like DTOs, configuration classes, or generated code — because they don’t contain real business logic.
+This is done by configuring the <excludes> section in jacoco-maven-plugin.
+
+Q8. By default, which classes does JaCoCo include in its coverage report?
+By default, JaCoCo considers all classes from src/main/java for coverage.
+Only the classes we execute through tests will show as green/yellow.
+The rest appear as red (0% covered).
+That’s why usually we exclude DTOs, configuration classes, and Spring Boot main class to get meaningful coverage.
+
+
+Q9. How do you check JaCoCo code coverage after running tests?
+- Open the JaCoCo HTML report: Maven default path: target/site/jacoco/index.html.
+- Copy the full path and open it in a browser.
+- Navigate through packages/classes to see line coverage.
+
+
+Q10. How do you include/exclude packages/classes in JaCoCo?
+
+  <includes>
+            <!-- Only include com.app.dto package -->
+            <include>com/app/dto/*</include>
+        </includes>
+        <!-- Optional: exclude everything else -->
+        <excludes>
+            <exclude>com/app/*</exclude>
+        </excludes>
+
+        <excludes>
+            <!-- Exclude only the controller package -->
+            <exclude>com/app/controller/*</exclude>
+        </excludes>
+
+Note:- 
+* : Only classes directly in this package like,
+com.app.controller.HomeController.class
+com.app.controller.UserController.class
+
+** : Classes in package + all sub-packages recursively like,
+com.app.controller.admin.AdminController.class
+
+
+You want to include all service classes except few one :
+<includes>
+        <include>com/app/service/*</include>  <!-- Include all classes directly -->
+    </includes>
+    <excludes>
+        <exclude>com/app/service/DummyService.class</exclude>
+        <exclude>com/app/service/LegacyService.class</exclude>
+    </excludes>
+
+
+
+                                                                 SECTION:- 01 , ISOLATION TEST 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+#####################################################
+           Integrate Jacoco plugin
+######################################################
+
+<plugin>
+	<groupId>org.jacoco</groupId>
+	<artifactId>jacoco-maven-plugin</artifactId>
+	<version>0.8.11</version>
+	<configuration>
+		<excludes>
+		<exclude>com/app/Unit**</exclude>
+ 		</excludes>
+	</configuration>
+	<executions>
+		<execution>
+			<goals>
+				<goal>prepare-agent</goal>
+			</goals>
+		</execution>
+		<execution>
+			<id>report</id>
+			<phase>test</phase>
+			<goals>
+				<goal>report</goal>
+			</goals>
+		</execution>
+	</executions>
+</plugin>
+
+Note: to see how much code tested open target -> site -> jacoco -> index.html (copy path and open in browser)
+
+
+                 ######################################################################################################################################
+                 Example 2 : Unit Test for UserController using JUnit 5 + Mockito WITHOUT ResponseEntity but with @ExtendWith(MockitoExtension.class)
+                 #######################################################################################################################################
+
+-----------------------------------------
+testing the UserController in isolation
+----------------------------------------
+
+Explanation of code ?
+----------------------
+
+What is being tested?
+-> You are testing the UserController in isolation.
+
+How is it isolated?
+-> The real UserService is not being used. Instead, you provide a mock (@Mock) of UserService. So the controller’s logic is tested without depending on database, repository, or Spring context.
+
+
+
+Entity :=> 
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String name;
+}
+
+
+
+Controller :=>
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    private final UserService service;
+
+    public UserController(UserService service) {
+        this.service = service;
+    }
+
+
+    @GetMapping("/{id}")
+    public String getUserName(@PathVariable int id) {
+        return service.getUserName(id);
+    }
+}
+
+
+
+service :=>
+
+@Service
+public class UserService {
+
+    private final UserRepository repository;
+
+    public UserService(UserRepository repository) {
+        this.repository = repository;
+    }
+    
+    public String getUserName(int id) {
+        Optional<User> user = repository.findById(id);
+        if (user.isPresent()) {
+            return user.get().getName();
+        } else {
+            return "Unknown User";
+        }
+    }
+}
+
+
+repository :=>
+
+public interface UserRepository extends JpaRepository<User,Integer> {
+}
+
+
+
+testController :=>
+
+import com.app.controller.UserController;
+import com.app.service.UserService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class UserControllerTest {
+
+    // service dummy object created
+    @Mock
+    private UserService mockService;
+
+
+    // done dependency injection constructor based
+    @InjectMocks
+    private UserController userController;
+    
+
+    @Test
+    public void testGetUser_Found(){
+        // Mock service call
+        when(mockService.getUserName(1)).thenReturn("sahil");
+
+        // Call controller method
+        String result = userController.getUserName(1);
+
+        // Assert result
+        assertEquals("sahil", result);
+
+        // Verify service interaction
+        verify(mockService, times(1)).getUserName(1);
+    }
+
+
+
+    @Test
+    void testGetUserName_NotFound() {
+        when(mockService.getUserName(2)).thenReturn("Unknown User");
+
+        String result = userController.getUserName(2);
+
+        assertEquals("Unknown User", result);
+
+        verify(mockService, times(1)).getUserName(2);
+    }
+}
+
+
+--------------------------------------------------------------------------------------------
+Unit Test for UserController (Manual Mockito Mocking) without @ExtendWith annotations :
+-------------------------------------------------------------------------------------------
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+class UserControllerTest {
+
+    @Test
+    void testGetUserName_Found() {
+        // Create mock manually
+        UserService mockService = mock(UserService.class);
+
+        // Define behavior
+        when(mockService.getUserName(1)).thenReturn("Alice");
+
+        // Inject into controller manually
+        UserController controller = new UserController(mockService);
+
+        // Call method & assert
+        assertEquals("Alice", controller.getUserName(1));
+
+        // Verify interaction
+        verify(mockService, times(1)).getUserName(1);
+    }
+
+    @Test
+    void testGetUserName_NotFound() {
+        // Create mock manually
+        UserService mockService = mock(UserService.class);
+
+        // Define behavior
+        when(mockService.getUserName(2)).thenReturn("Unknown User");
+
+        // Inject into controller manually
+        UserController controller = new UserController(mockService);
+
+        // Call method & assert
+        assertEquals("Unknown User", controller.getUserName(2));
+
+        // Verify interaction
+        verify(mockService, times(1)).getUserName(2);
+    }
+}
+
+
+
+
+                                                  #####################################################################
+                                                   Example 3  : Unit Tests for UserService with Mocked UserRepository
+                                                  ######################################################################
+
+-----------------------------------------
+testing the userService in isolation
+----------------------------------------
+
+Note: use same above code for user-service-test class
+
+
+@ExtendWith(MockitoExtension.class)
+public class UserServiceTest {
+
+    @Mock
+    private UserRepository repository;
+
+    @InjectMocks
+    private UserService service;
+
+    @Test
+    public void testGetUsername_Found(){
+        // Arrange
+        when(repository.findById(1)).thenReturn(Optional.of(new User(1,"sahil")));
+
+        // Act
+       String name= service.getUserName(1);
+
+       // Assert
+        assertEquals("sahil",name);
+
+        // Verify that repository.findById() was called exactly once with argument 1
+        verify(repository,times(1)).findById(1);
+    }
+
+
+    @Test
+    public void testGetUsername_NotFound(){
+     when(repository.findById(2)).thenReturn(Optional.empty());
+     String name = service.getUserName(2);
+     assertEquals("Unknown User",name);
+        verify(repository,times(1)).findById(2);
+    }
+}
+
+
+
+
+
+                                                  #########################################################################
+                                                   Example 4 : Testing RestControllers like real HTTP requests/responses.
+                                                  #########################################################################
+
+Application.properties Files :
+
+
+spring.application.name=mvc_unit_test
+
+spring.datasource.url=jdbc:mysql://localhost:3306/db1
+spring.datasource.username=root
+spring.datasource.password=test
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+
+
+Entitiy class :
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String name;
+}
+
+
+Controller class : 
+
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+    private final UserService service;
+
+    public UserController(UserService service) { // constructor-based DI
+        this.service = service;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<String> getUserName(@PathVariable int id) {
+        String name = service.getUserName(id);
+        if ("Unknown User".equals(name)) {
+            return ResponseEntity.notFound().build();      // 404
+        }
+        return ResponseEntity.ok(name);                    // 200
+    }
+
+    @PostMapping
+    public ResponseEntity<User> create(@RequestBody User user) {
+        User created = service.createUser(user);
+        return ResponseEntity.status(201).body(created);   // 201
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<User> update(@PathVariable int id, @RequestBody User user) {
+        Optional<User> updated = service.updateUser(id, user);
+        return updated.map(ResponseEntity::ok)              // 200
+                .orElseGet(() -> ResponseEntity.notFound().build()); // 404
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable int id) {
+        boolean deleted = service.deleteUser(id);
+        return deleted ? ResponseEntity.noContent().build() // 204
+                : ResponseEntity.notFound().build(); // 404
+    }
+
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = service.findAllUsers();
+
+        if (users.isEmpty()) {
+            // Return HTTP 204 No Content
+            return ResponseEntity.noContent().build();
+        }
+
+        // Return HTTP 200 OK with the list
+        return ResponseEntity.ok(users);
+    }
+}
+
+
+
+service class : 
+
+@Service
+public class UserService {
+    private final UserRepository repository;
+
+    public UserService(UserRepository repository) { // constructor-based DI
+        this.repository = repository;
+    }
+
+    public String getUserName(int id) {
+        return repository.findById(id).map(User::getName).orElse("Unknown User");
+    }
+
+    public User createUser(User user) {
+        return repository.save(user);
+    }
+
+    public Optional<User> updateUser(int id, User user) {
+        return repository.findById(id).map(existing -> repository.save(new User(id, user.getName())));
+    }
+
+    public boolean deleteUser(int id) {
+        if (repository.findById(id).isPresent()) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public List<User> findAllUsers() {
+        return repository.findAll();
+    }
+
+}
+
+
+Repository interface  :
+
+public interface UserRepository extends JpaRepository<User,Integer> {
+}
+
+
+Now Test class for UserControllerWebMvcTest  : 
+
+package com.app;
+
+import com.app.controller.UserController;
+import com.app.entity.User;
+import com.app.service.UserService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+
+
+@WebMvcTest(UserController.class)
+public class UserControllerWebMvcTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private UserService service;
+
+
+    @Test
+    void getUser_found_returns200() throws Exception {
+        when(service.getUserName(1)).thenReturn("Alice");
+
+        mockMvc.perform(get("/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Alice"));
+    }
+
+    @Test
+    void getUser_notFound_returns404() throws Exception {
+        when(service.getUserName(99)).thenReturn("Unknown User");
+
+        mockMvc.perform(get("/users/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createUser_returns201_and_body() throws Exception {
+        when(service.createUser(any(User.class))).thenReturn(new User(10, "Bob"));
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":10,\"name\":\"Bob\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.name").value("Bob"));
+    }
+
+    @Test
+    void updateUser_found_returns200() throws Exception {
+        when(service.updateUser(eq(5), any(User.class)))
+                .thenReturn(Optional.of(new User(5, "Charlie")));
+
+        mockMvc.perform(put("/users/5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":5,\"name\":\"Charlie\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5))
+                .andExpect(jsonPath("$.name").value("Charlie"));
+    }
+
+    @Test
+    void updateUser_notFound_returns404() throws Exception {
+        when(service.updateUser(eq(6), any(User.class)))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(put("/users/6")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":6,\"name\":\"X\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteUser_returns204_whenDeleted() throws Exception {
+        when(service.deleteUser(12)).thenReturn(true);
+
+        mockMvc.perform(delete("/users/12"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteUser_returns404_whenMissing() throws Exception {
+        when(service.deleteUser(13)).thenReturn(false);
+
+        mockMvc.perform(delete("/users/13"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetAllUsers_ReturnsUsers() throws Exception {
+        when(service.findAllUsers())
+                .thenReturn(Arrays.asList(new User(1, "Alice"), new User(2, "Bob")));
+
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Alice"))
+                .andExpect(jsonPath("$[1].name").value("Bob"));
+    }
+
+    @Test
+    void testGetAllUsers_NoContent() throws Exception {
+        when(service.findAllUsers()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isNoContent());
+    }
+}
+
+
+
+                                                  #####################################
+                                                   Example 5 : Testing  SERVICE LAYER 
+                                                  #####################################
+
+
+NOTE: using all above controller test coding for service test  :
+
+
+package com.app;
+
+
+
+import com.app.entity.User;
+import com.app.repository.UserRepository;
+import com.app.service.UserService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class) // enable Mockito for JUnit 5
+class UserServiceTest {
+
+    @Mock
+    private UserRepository repository;
+
+    @InjectMocks
+    private UserService service; // repository mock injected via constructor
+
+    @Test
+    void getUserName_found() {
+        when(repository.findById(1)).thenReturn(Optional.of(new User(1, "Alice")));
+
+        String result = service.getUserName(1);
+
+        assertEquals("Alice", result);
+        verify(repository, times(1)).findById(1);
+    }
+
+    @Test
+    void getUserName_notFound() {
+        when(repository.findById(99)).thenReturn(Optional.empty());
+
+        String result = service.getUserName(99);
+
+        assertEquals("Unknown User", result);
+        verify(repository, times(1)).findById(99);
+    }
+
+    @Test
+    void createUser_saves() {
+        User input = new User(10, "Bob");
+        when(repository.save(any(User.class))).thenReturn(input);
+
+        User saved = service.createUser(input);
+
+        assertEquals("Bob", saved.getName());
+        verify(repository).save(input);
+    }
+
+    @Test
+    void updateUser_found_updates() {
+        when(repository.findById(5)).thenReturn(Optional.of(new User(5, "Old")));
+        when(repository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User body = new User(0, "New"); // id is overridden by service
+        User updated = service.updateUser(5, body).orElseThrow();
+
+        assertEquals(5, updated.getId());
+        assertEquals("New", updated.getName());
+        verify(repository).findById(5);
+        verify(repository).save(any(User.class));
+    }
+
+    @Test
+    void updateUser_notFound() {
+        when(repository.findById(6)).thenReturn(Optional.empty());
+
+        var result = service.updateUser(6, new User(6, "X"));
+
+        assertEquals(false, result.isPresent());
+        verify(repository).findById(6);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deleteUser_found_returnsTrue() {
+        when(repository.findById(7)).thenReturn(Optional.of(new User(7, "Y")));
+
+        boolean deleted = service.deleteUser(7);
+
+        assertEquals(true, deleted);
+        verify(repository).findById(7);
+        verify(repository).deleteById(7);
+    }
+
+    @Test
+    void deleteUser_notFound_returnsFalse() {
+        when(repository.findById(8)).thenReturn(Optional.empty());
+
+        boolean deleted = service.deleteUser(8);
+
+        assertEquals(false, deleted);
+        verify(repository).findById(8);
+        verify(repository, never()).deleteById(anyInt());
+    }
+    @Test
+    void testFindAllUsers() {
+        // given
+        List<User> users = Arrays.asList(
+                new User(1, "Alice"),
+                new User(2, "Bob")
+        );
+
+        when(repository.findAll()).thenReturn(users);
+
+        // when
+        List<User> result = service.findAllUsers();
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Alice");
+        verify(repository, times(1)).findAll();
+    }
+}
+
+
+
+
+
+
+
+
+
+                                                                 SECTION:- 02 , INTEGERATION TEST 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+           
+ 
+Q. how to stop spring/spring boot project gracefully?
+In Spring Boot, graceful shutdown is enabled using
+server.shutdown=graceful.
+On receiving SIGTERM, the application stops accepting new requests, completes ongoing ones, executes cleanup callbacks like @PreDestroy, and shuts down safely.

@@ -1,0 +1,45 @@
+Q1.  Aspect Oriented Programming   :
+                        what is Aspect Oriented Programming ?
+                              - it is a methodlogy/tarika for programming.as oops is an methodogly/concept similarly it is also.
+                              - it seperates cross cutting concerns from main business logic.
+                              - it can be implemented in normal core java application and ofcourse in web application.
+    AOP terminology (AOP me use hone wale important terms) :
+              1️⃣ Aspect :
+                       - Aspect = modules that contains crosscutting concerns like Logging,Transaction,Security  (Jo kaam har jagah repeat hota hai, usko Aspect bolte hain)
+                       - eg- @Aspect
+                             public class LoggingAspect { }
+              2️⃣ Join Point :
+                          - Program ka wo exact point jahan extra logic add ho sakta hai
+                          - eg- Method call , Method execution, Exception throw
+                          - Spring AOP me Sirf method execution join point hota hai.
+              3️⃣ Advice :
+                        - action taken by an aspect / Actual code jo execute hota hai join point pe
+                        - Types:
+                                 | Advice Type       | Kab chalta hai                            |
+                                 | ----------------- | ----------------------------------------- |
+                                 | `@Before`         | Method se pehle                           |
+                                 | `@After`          | Method ke baad (always)                   |
+                                 | `@AfterReturning` | Method successfully complete hone ke baad |
+                                 | `@AfterThrowing`  | Exception aane par                        |
+                                 | `@Around`         | Method ke pehle aur baad dono             |
+                       - eg : @Before("execution(* service.*(..))")
+                              public void logBefore() { }
+                4️⃣ Pointcut:
+                         - Rule / expression jo batata hai kaunse method pe advice lagega like, predicate to match join points.
+                         - it is nothing but Advice + kaha lage = Pointcut.
+                         - eg :  @Pointcut("execution(* com.app.service.*.*(..))")
+                                 public void serviceMethods() {}
+                 5️⃣ Target Object :
+                           - Original object jisme business logic hota hai. / Real object jiska method call ho raha hai.
+                           - eg : UserService userService;
+                 6️⃣ Proxy :
+                         - Spring ka banaya hua wrapper object. / Client aur target ke beech ka middleman.
+                                        - Client proxy ko call karta hai,
+                                        - Proxy advice execute karta hai,
+                                        - Fir real method call hota hai.
+                7️⃣ Weaving :
+                          - Aspect ko target object ke saath jodne ka process. / Aspect ko method me inject karna = Weaving.
+                          - Types:
+                                 - Compile-time
+                                 - Load-time
+                                 - Runtime (Spring AOP)

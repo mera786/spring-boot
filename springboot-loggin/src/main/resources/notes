@@ -1,0 +1,54 @@
+                                                     Logging
+
+1. What is Logging?
+Logging = Recording what is happening inside your application.
+👉 It helps you to:
+               - Debug errors
+               - Track application flow
+               - Monitor production issues
+               - Understand user actions
+               - Analyze performance
+
+
+2. What is Log4j and Logback?
+Both are Java logging frameworks.
+
+🔹 Log4j (Apache Log4j) :
+                      - Old and popular logging framework
+                      - Created by Apache
+                      - Log4j 1 is deprecated ❌
+                      - Log4j 2 is modern and fast
+🔹 Logback     :
+               - Modern logging framework
+               - Created by same person who made Log4j
+               - Default logger in Spring Boot
+               - Faster and better than Log4j 1
+👉 Spring Boot internally uses SLF4J + Logback.
+
+
+2. SLF4J (Facade) – What is it?
+🔹 SLF4J = Simple Logging Facade for Java.
+        - It is NOT a logger
+        - It is only an abstraction layer (interface)
+                      Means:
+                          - It does not write logs
+                          - It connects your code to actual logging frameworks.
+
+
+3. Logging Level Table ?
+
+               | Logging Level | Severity Meaning                  |   When to Use Which Level         |
+               | ------------- | --------------------------------- |-------------------------------------
+               | **FATAL**     | Very High (App crash)             | Application must stop             |
+               | **ERROR**     | High (Something failed)           | Exception or failure              |
+               | **WARN**      | Medium (Potential problem)        | Something wrong but app continues |
+               | **INFO**      | Normal (General information)      | Normal business flow              |
+               | **DEBUG**     | Low (Developer debugging)         | Developer debugging               |
+               | **TRACE**     | Very Low (Detailed internal logs) | Very detailed debugging           |
+
+  Note:- Debug and Trace are not by default enabled you need to do configuration for enable then they will visible.
+
+
+    Steps to create custom Log File :
+
+       -> Create a file named 'logback-spring.xml' file in the src/main/resources directory. This file will contain the configuration for Logback.

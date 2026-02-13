@@ -1,0 +1,145 @@
+                                                                         ISOLATION :
+
+
+Q1. What is Isolation in Spring?
+- Isolation defines how one transaction is isolated from other concurrent transactions.
+- Matlab: Ek transaction dusre transaction ke data ko kitna aur kaise dekh sakta hai jab dono parallel chal rahe ho..
+
+          Transaction Isolation Levels :
+                               - DEFAULT :
+                               - READ_UNCOMMITTED
+                               - READ_COMMITTED
+                               - REPEATABLE_READ
+                               - SERIALIZABLE
+
+     Isolation levels solve these problems 👇 :
+                               - Dirty Read :
+                                        - Read data that is not committed yet.
+                                        - ex :
+                                                     TRANSACTION-A                                                       TRANSACTION-B
+                                                           |                                                                  |
+                                          T1               | Update Book Set bookName="harrypotter" where bookId=1;           |
+                                                           |                                                                  |
+                                          ------------------------------------------------------------------------------------------------------------------------------
+                                                           |                                                                  |
+                                          T2               |                                                                  | select * from book where bookId=1;
+                                                           |                                                                  |
+                                          --------------------------------------------------------------------------------------------------------------------------------
+                                                           |                                                                  |
+                                          T3               |                                                                  |
+                                                           |                                                                  |
+
+
+                               - Non-Repeatable Read :
+                                        - Same row read twice gives different value.
+                                        - ex :
+                                                     TRANSACTION-A                                                       TRANSACTION-B
+                                                           |                                                                  |
+                                          T1               | select * from book where bookId=1;                               |
+                                                           |                                                                  |
+                                          ------------------------------------------------------------------------------------------------------------------------------
+                                                           |                                                                  |
+                                          T2               |                                                                  | Update Book Set bookName="harrypotter" where bookId=1;
+                                                           |                                                                  |
+                                          --------------------------------------------------------------------------------------------------------------------------------
+                                                           |                                                                  |
+                                          T3               | select * from book where bookId=1;                               |
+                                                           |                                                                  |
+                                          --------------------------------------------------------------------------------------------------------------------------------
+
+                               - Phantom Read :
+                                        - New rows appear in second query.
+                                        - ex :
+                                                     TRANSACTION-A                                                       TRANSACTION-B
+                                                           |                                                                  |
+                                          T1               | select * from book where price <100;                             |
+                                                           |                                                                  |
+                                          ------------------------------------------------------------------------------------------------------------------------------
+                                                           |                                                                  |
+                                          T2               |                                                                  | Insert into Book values(5,"new book",50);
+                                                           |                                                                  |
+                                          --------------------------------------------------------------------------------------------------------------------------------
+                                                           |                                                                  |
+                                          T3               | select * from book where price=<100;                             |
+                                                           |                                                                  |
+                                          --------------------------------------------------------------------------------------------------------------------------------
+
+
+                - DEFAULT :
+                        - Database ka default isolation level use karo.
+                        - Spring Boot / JPA khud koi isolation force nahi karta, balki jo DB ka default hota hai wahi use hota hai.
+                        - 🧠 Database Default Isolation Levels :
+                                                         | Database     | Default Isolation Level |
+                                                         | ------------ | ----------------------- |
+                                                         | MySQL InnoDB | REPEATABLE_READ         |
+                                                         | PostgreSQL   | READ_COMMITTED          |
+                                                         | Oracle       | READ_COMMITTED          |
+                                                         | SQL Server   | READ_COMMITTED          |
+
+                - READ_UNCOMMITTED :
+                        - Dusre transaction ka uncommitted data bhi padh sakta hai.
+                        - Matlab Dirty Read allowed.
+                        -  READ_UNCOMMITTED  ->  ❌ Almost No Lock (Very Weak Locking).
+                        - Database usually read lock nahi lagata (depends on DB).
+                        - Performance: 🔥 Very Fast (No blocking).
+                        - ❌ Problems Allowed :
+                                          | Problem             | Allowed? |
+                                          | ------------------- | -------- |
+                                          | Dirty Read          | ✅ Yes   |
+                                          | Non-Repeatable Read | ✅ Yes   |
+                                          | Phantom Read        | ✅ Yes   |
+                        - Example:
+                              - System logs 
+                              - User activity tracking
+
+                - READ_COMMITTED (Industry Default):
+                        - Sirf committed data hi read hoga.
+                        - Dirty Read problem solve ho jata hai.
+                        - READ_COMMITTED  ->  🔒 Row Level Shared Lock (Read)
+                                              🔒 Row Level Exclusive Lock (Write)
+                        - Read lock statement level pe hota hai (after read release).
+                        - Performance: ⚡ Fast
+                        - ❌ Problems Allowed :
+                                          | Problem             | Allowed? |
+                                          | ------------------- | -------- |
+                                          | Dirty Read          | ❌ No    |
+                                          | Non-Repeatable Read | ✅ Yes   |
+                                          | Phantom Read        | ✅ Yes   |
+
+                - REPEATABLE_READ :
+                        - Ek transaction me jo data ek baar read hua,
+                        - dobara read karoge to same hi milega (even if someone updated it).
+                        - REPEATABLE_READ -> 🔒 Row Lock + 🔒 Gap Lock (Range Lock)
+                        - Gap Lock prevents insert between rows.
+                        - Performance: ⚡ Medium (slower than READ_COMMITTED).
+                        - ❌ Problems Allowed :
+                                          | Problem             | Allowed? |
+                                          | ------------------- | -------- |
+                                          | Dirty Read          | ❌ No    |
+                                          | Non-Repeatable Read | ❌ No    |
+                                          | Phantom Read        | ✅ Yes   |
+
+                - SERIALIZABLE :
+                        - Sab transactions line me ek-ek karke execute hote hai.
+                        - Jaise single user system.
+                        - SERIALIZABLE -> 🔒 Shared Lock (Read)
+                                          🔒 Exclusive Lock (Write)
+                                          🔒 Range Lock / Predicate Lock
+                                          🔒 Gap Lock
+                        - Effectively behaves like Full Table Lock.
+                        - Performance: 🐌 Very Slow (No parallelism)
+                        - ❌ Problems Allowed :
+                                          | Problem             | Allowed? |
+                                          | ------------------- | -------- |
+                                          | Dirty Read          | ❌ No    |
+                                          | Non-Repeatable Read | ❌ No    |
+                                          | Phantom Read        | ❌ No    |
+
+
+
+🥇 Database Internal Locks :  DB automatically uses:-
+                                           🔹 Shared Lock (Read Lock) :
+                                                                  - Multiple reads allowed
+                                                                  - Write blocked
+                                          🔹 Exclusive Lock (Write Lock) :
+                                                                  - No one else can read/write.
