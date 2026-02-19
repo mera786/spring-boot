@@ -1,0 +1,94 @@
+                                   🔲 FILTER
+Filter is a server-side component that intercepts HTTP requests and responses before they reach the Servlet (DispatcherServlet) and after the response is generated.
+
+                      ( Client / Browser )
+                               |
+                               v
+                     ......................
+                     .   Embedded Server  .
+                     .   (Tomcat/Jetty)   .
+                     ......................
+                               |
+                               v
+                     ......................
+                     .      Servlet API   .
+                     . (HttpServlet etc.)  .
+                     ......................
+                               |
+                               v
+                     ......................
+                     .   DispatcherServlet .
+                     ......................
+                               |
+                               v
+                     ......................
+                     .  HandlerInterceptor .
+                     .  ------------------  .
+                     .  preHandle()        .
+                     .  postHandle()       .
+                     .  afterCompletion()  .
+                     ......................
+                               |
+                               v
+                     ......................
+                     .      Controllers    .
+                     .  ------------------  .
+                     .  HomeController     .
+                     .  ApplicantController.
+                     .  Controller3        .
+                     ......................
+
+ 🔲⛓️ Filter Chain :
+
+     ( Client / Browser )
+              |
+              v
+    ......................
+    .   Embedded Server  .
+    .   (Tomcat/Jetty)   .
+    ......................
+              |
+              v
+    ......................
+    .     Filter Chain    .
+    .  ------------------  .
+    .  Filter 1           .
+    .  (LoggingFilter)    .
+    ......................
+              |
+              v
+    ......................
+    .  Filter 2           .
+    .  (AuthFilter)       .
+    ......................
+              |
+              v
+    ......................
+    .  Filter 3           .
+    .  (CORSFilter)       .
+    ......................
+              |
+              v
+    ......................
+    .   DispatcherServlet .
+    ......................
+              |
+              v
+    ......................
+    .     Controllers     .
+    ......................
+              |
+              v
+         ( Response )
+
+🔥 Execution Flow (Very Important) :
+                           - Request aata hai
+                           - Embedded Server receive karta hai
+                           - Filter 1 → Filter 2 → Filter 3 (order wise execute hote hain)
+                           - Fir DispatcherServlet ko pass hota hai
+                           - Controller execute hota hai
+                           - Response wapas reverse order me filters se pass hota hai
+                               👉 Response aate time:
+                                                  - Filter 3
+                                                  - Filter 2
+                                                  - Filter 1
