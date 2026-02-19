@@ -1,0 +1,61 @@
+what is scheduling ?
+ - scheduling in spring boot allows yout to automate tasks at specific intervals or times.
+ - it help in running background jobs without manual intervention.
+
+why do we need scheduling?
+- without scheduling, repetitive tasks must be triggered manually.
+
+
+
+use case of scheduling?
+| **Scenario**                      | **How Scheduling Helps**                                                   |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| order processing                  | Automatically process pending orders every 5 minutes                       |
+| email notifications               | Send promotional emails daily at midnight                                  |
+| data cleanup                      | Delete old records every sunday at 2 AM                                    |
+| stock updates                     | fetch stock prices  from APIs every hour                                   |
+| system health check               | log system status every minute                                             |
+
+
+How to enable scheduling in spring boot?
+use in main class / configuration class  @EnableScheduling
+
+
+@@Scheduled :
+  - it is used to run a method automatically at a fixed time interval or specific time, without manually calling it.
+  - this annotation has various attributes :
+                  | Attribute         | Purpose                                                    |
+                  | ----------------- | ---------------------------------------------------------- |
+                  | `cron`            | Runs task using cron expression                            |
+                  | `zone`            | Sets timezone for cron execution                           |
+                  | `fixedRate`       | Runs task at fixed interval (based on start time)          |
+                  | `fixedRateString` | Same as fixedRate but as String (supports external config) |
+                  | `fixedDelay`      | Runs task after last method execution if any method calls there |
+
+
+Cron expression :  Cron expression gives more control over scheduling.
+┌───────────── second (0 - 59)
+│ ┌─────────── minute (0 - 59)
+│ │ ┌───────── hour (0 - 23)
+│ │ │ ┌─────── day of month (1 - 31)
+│ │ │ │ ┌───── month (1 - 12)
+│ │ │ │ │ ┌─── day of week (0 - 7) (Sun=0 or 7)
+│ │ │ │ │ │
+* * * * * *
+
+
+Cron Special Characters Table :
+| Character | Meaning           | Usage                                               | Example             | Example Meaning              |
+| --------- | ----------------- | --------------------------------------------------- | ------------------- | ---------------------------- |
+| `*`       | Any value         | Matches all possible values                         | `0 * * * * ?`       | Every minute                 |
+| `?`       | No specific value | Used in day-of-month or day-of-week (one must be ?) | `0 0 10 ? * MON`    | Every Monday at 10 AM        |
+| `-`       | Range             | Defines range of values                             | `0 0 9-17 * * ?`    | Every hour from 9 AM to 5 PM |
+| `,`       | List              | Multiple specific values                            | `0 0 9,12,15 * * ?` | At 9 AM, 12 PM, and 3 PM     |
+| `/`       | Step / Increment  | Run at intervals                                    | `0 0/5 * * * ?`     | Every 5 minutes              |
+| `L`       | Last              | Last day of month/week                              | `0 0 10 L * ?`      | Last day of month at 10 AM   |
+| `W`       | Weekday           | Nearest weekday                                     | `0 0 10 15W * ?`    | Nearest weekday to 15th      |
+| `#`       | Nth weekday       | Specific occurrence of weekday                      | `0 0 10 ? * MON#2`  | Second Monday of month       |
+Note:- instead of remembering this table search online croneMaker.
+
+
+

@@ -1,0 +1,195 @@
+🎯 Real World Scenario where radis cache use ?
+Library me:
+        - 📖 Books = Database data
+        - 👨‍🎓 Students = Users / Clients
+        - 🧑‍💼 Store Keeper = Application Server (Spring Boot)
+        - 🗄️ Main Racks = Database (MySQL, PostgreSQL etc.)
+        - 🧺 Counter pe rakhi popular books = Redis Cache
+🏗️ Without Cache (Direct Database Access) :
+🔁 Kya ho raha hai?
+        - Student bolta hai: "Mujhe Harry Potter chahiye"
+        - Store keeper jaata hai rack pe
+        - Book dhundta hai
+        - Student ko deta hai
+        - Next student fir wahi book maangta hai
+        - Store keeper fir rack pe jaata hai
+👉 Har baar rack check karna = Har baar database hit karna
+❌ Problem :
+        - Rack door hai → Time lagta hai
+        - Agar 100 students Harry Potter maang rahe hain → 100 baar rack check
+        - Database slow ho sakta hai
+        - Load increase hoga
+⚡ With Redis Cache :
+           - Ab smart store keeper kya karta hai?
+           - Pehle student ne Harry Potter maangi
+           - Store keeper rack (Database) se book laaya
+           - Ek copy counter pe rakh di (Redis Cache)
+           - Ab jo bhi student aayega:
+                                - Pehle counter check hoga
+                                - Wahi se book de di jayegi
+                                - Rack tak jaane ki zarurat nahi
+
+Note:-
+In modern projects, Redis is integrated using:
+  - Spring Boot
+  - Spring Cache abstraction
+  - @Cacheable, @CachePut, @CacheEvict
+Example:
+@Cacheable("users")
+public User getUser(Long id) {
+    return userRepository.findById(id).get();
+}
+👉 Spring handles caching
+👉 Redis stores the data
+
+ What is cache ?
+Cache is a temporary storage that keeps frequently used data so it can be accessed faster instead of fetching it again from the database or API.
+
+Why use caching ?
+- Reduce latency : faster access to data compared to fetching from a database or an external service.
+- Decrease Load : Reduces the number of calls to the backend system or database.
+- improve scalability : helps applications handle higher traffic loads efficiently.
+
+How many Types of Cache ?
+1️⃣ Location Based Types of Cache.
+  1. In-Memory
+  2. Distributed
+
+1. In-Memory :
+   - Data, application ke memory (RAM) me store hota hai.
+   - store krne ke liye used krta hai :
+                                 - Java ConcurrentMap.
+                                 - Caffeine
+                                 - EhCache
+   - Server restart pe data chala jaata hai.
+   - Sirf ek application instance ke liye kaam karta hai.
+   - Very fast (no network call)
+🧠 In-Memory Cache Limitation :
+  - Suppose tumne 3 instances deploy kiye:
+                             ┌───────────────┐
+             Client ───────► │  Instance 1  │
+                             └───────────────┘
+                             ┌───────────────┐
+             Client ───────► │  Instance 2  │
+                             └───────────────┘
+                             ┌───────────────┐
+             Client ───────► │  Instance 3  │
+                             └───────────────┘
+       ⚠️ Har instance ka apna separate RAM hoga.
+   ❌ Problem 1: Data Inconsistency :
+         Example:
+              - User request Pune weather
+              - Load balancer request Instance 1 pe bhejta hai
+              - Instance 1 cache me store karta hai
+         Next request:
+              - Load balancer request Instance 2 pe bhej deta hai
+              - Instance 2 ke cache me data nahi
+              - Fir DB hit karega ❌
+             👉 Caching ka fayda kam ho gaya
+   ❌ Problem 2: Update Issue
+              - Suppose weather update hua:
+              - Instance 1 ne cache update kiya
+              - Instance 2 & 3 ke cache me purana data abhi bhi hai
+              👉 Stale data problem 😵
+
+2. Distributed Cache :
+     - Multiple servers ke beech shared cache.
+     - store krne ke liye use krta hai:
+                                  - Redis.
+                                  - Memcached
+     - Scalable hota hai.
+     - Multiple application instances same cache use kar sakti hain.
+     - Load balancing friendly.
+     - Suitable for microservices.
+     - Centralized caching.
+
+🔥 Annotations Used in Caching ?
+@EnableCaching :
+           - Caching feature ko activate karta hai.
+           - Main class pe (generally Spring Boot Application class pe).
+           - or configuration class bna ke use kr skte is annotation ko.
+@Cacheable :
+          - Pehle cache check karta hai.
+          - Agar data mil gaya → method execute nahi hoga.
+          - Agar nahi mila → method execute hoga → result cache me store hoga.
+          - Mostly Use: Read operations (GET APIs).
+          - Example:
+          @Cacheable(value = "weatherCache", key = "#city")
+          public String getWeatherByCity(String city) {
+              return weatherRepository.findByCity(city)
+                      .map(Weather::getForecast)
+                      .orElse("Not Found");
+          }
+          Note:
+             - value = cache ka name
+             - key = Cache ke andar data kis naam se store hoga.
+@CachePut :
+          - Method hamesha execute hoga.
+          - Result cache me update karega.
+          - Mostly update operation me use hota hai.
+          - Example:
+                   @CachePut(value = "weatherCache", key = "#weather.city")
+                   public String updateWeather(Weather weather) {
+                       weatherRepository.save(weather);
+                       return weather.getForecast();
+                   }
+@CacheEvict :
+          - Cache se data remove karta hai.
+          - Mostly delete operation me use hota hai.
+          - Example:
+                 @CacheEvict(value = "weatherCache", key = "#city")
+                 public void deleteWeather(String city) {
+                     weatherRepository.deleteByCity(city);
+                 }
+          - Sab cache clear karna ho:  @CacheEvict(value = "weatherCache", allEntries = true)
+
+@Caching :
+        - Multiple caching annotations ek sath use karne ke liye.
+        - Example:
+            @Caching(
+                put = {
+                    @CachePut(value = "weatherCache", key = "#weather.city")
+                },
+                evict = {
+                    @CacheEvict(value = "otherCache", allEntries = true)
+                }
+            )
+Note:- @Cacheable skips method execution if data exists in cache,
+       while @CachePut always executes the method and updates cache.
+
+
+🔥 What is Redis Cache?
+   - Redis ek in-memory data store hai jo data ko RAM me store karta hai taaki application ko fast response mile.
+   - Jab hum Redis ko caching ke liye use karte hain, to use kehte hain Redis Cache.
+
+🔥 Connect Spring boot App to Redis :
+  STEP-1 :
+      - Installed docker on AWS.
+      - ensure docker up and running
+  STEP-2 :
+      - Agar Docker installed hai, to bas ye command chala do: docker run --name <redis-cachename> -p 6379:6379 -d redis
+      - Redis CLI open karne ke liye: docker exec -it redis redis-cli
+      - Test: ping
+      - Output aayega: PONG
+     👉 Matlab Redis chal raha hai ✅
+  STEP-3 :
+       - application.properties me:
+                           spring.cache.type=redis
+                           spring.data.redis.host= localhost / <EC2-public-IP>
+                           spring.data.redis.port=6379
+       - Dependency:
+                 <dependency>
+                     <groupId>org.springframework.boot</groupId>
+                     <artifactId>spring-boot-starter-data-redis</artifactId>
+                 </dependency>
+
+
+Note:- to see data use redis cli like,
+
+redis-cli  -> press enter
+               get weather::Pune
+               keys *
+
+
+
+

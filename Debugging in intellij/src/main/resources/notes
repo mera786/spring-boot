@@ -1,0 +1,44 @@
+
+Whenever you want to debug your application ?
+- 1st rule run application in debug mode.
+
+
+                                      BASIC DEBUGGER
+🔴 BreakPoint :
+         - Jis line par tum chahte ho ki code execution temporarily ruk jaye jab tum request bhejo (API call karo), wahan breakpoint lagate ho.
+
+🔕 Mute Breakpoint :
+          - Ye temporarily saare breakpoints disable kar deta hai bina unhe delete kiye.
+
+Threads & Variables shows :
+             - It shows the currently active execution threads and the runtime values of variables at the breakpoint.
+
+
+Debugger Actions / Debugging Controls
+   ▶ Resume Program :
+              - Resume Program is a debugger action.
+              - it is jump to one break-point to another break-point.
+              - Breakpoint lagaya,Debug mode me run kiya,Code ruk gaya,▶ (Resume) dabaya,Code next breakpoint tak run karega.
+   ⏸ Pause Program :
+              - Pause Program is a debugger action.
+              - used to temporarily suspend a running application to inspect.
+
+   1️⃣ Step Over (F8) :
+                 - Step Over is a debugger action.
+                 - used to execute the current line of code(line by line) without entering into any called method.
+   2️⃣ Step Into (F7) :
+                 - Step Into is a debugger action.
+                 - used to enter inside the called method to debug its internal implementation.
+   3️⃣ Step Out (Shift + F8) :
+                 - Step Out is a debugger action.
+                 - used to exit the current method and return to the calling method.
+
+🎯 What is Evaluate Expression?
+Evaluate Expression debugger ka feature hai jo tumhe :
+                  - runtime ke time,current execution context me,koi bhi expression run karke result dekhne deta hai.
+                  - Ex->
+                      Method manually call karna  : orderService.getAllOrders()
+                      Complex logic test karna :   user.getOrders().stream().filter(o -> o.getPrice() > 5000).toList()
+
+
+                  Advanced IntelliJ Debugging
