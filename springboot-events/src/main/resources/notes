@@ -1,0 +1,124 @@
+✅ What is an Event?
+       - Event matlab "koi action ya state change hone ki notification"
+       - 💡 Real Life Example
+            Socho:
+                 - Tumne Amazon pe order place kiya
+                 - Order place hona = Event
+                 - System ko notify kiya gaya
+            Phir:
+                - Email service ko pata chala
+                - SMS service ko pata chala
+                - Inventory service ko pata chala
+      👉 Sabko directly call nahi kiya gaya. Sirf event publish hua.
+
+
+✅ What is a Listener?
+    - Listener matlab wo component jo event sunta hai aur react karta hai.
+    - Event publish hote hi jo class us event ko handle kare, wo listener hai.
+              - OrderCreatedEvent ko sun raha hai.
+              - Event aate hi run ho jayega.
+
+
+                       Spring Events  VS   Kafka
+                      ---------------------------
+Spring Events:
+            - In-memory, same application ke andar communication
+Kafka:
+      - Distributed, alag-alag applications ke beech communication
+
+
+
+           Spring boot events Internal Working
+
+
+               +--------------------+
+               |   Publisher        |
+               |   OrderService     |
+               +--------------------+
+                         |
+                         |  publishEvent() using application event publisher interface
+                         v
+               +----------------------------+
+               |  ApplicationEventPublisher |
+               +----------------------------+
+                         |
+                         v
+               +----------------------------+
+               | ApplicationEventMulticaster|
+               +----------------------------+
+                         |
+                         |----> [Internal Listener Cache]
+                         |       (EventType : Listener)
+                         |
+                         v
+                  -----------------------------
+                  |                           |
+                  v                           v
+
+               +----------------+      +----------------+
+               |  @EventListener|      |  @EventListener|
+               |     Listener1  |      |     Listener2  |
+               +----------------+      +----------------+
+
+
+                              Spring Events ke advanced concepts
+1️⃣ Order in Listeners :
+   - Jab ek hi event ko multiple listeners handle karte hain,toh kaun pehle chalega aur kaun baad me — usko decide karna = Listener Order.
+   - By default → Order guaranteed nahi hota.
+   - Use Case,
+         Order create hua:
+                        - Pehle Inventory update ho
+                        - Fir Payment process ho
+                        - Fir Email send ho.
+   - Example :
+             @EventListener
+             @Order(1)
+             public void updateInventory(OrderCreatedEvent event) {
+                 System.out.println("Inventory Updated");
+             }
+
+             @EventListener
+             @Order(2)
+             public void sendEmail(OrderCreatedEvent event) {
+                 System.out.println("Email Sent");
+             }
+   - Rule: Smaller number = higher priority (pehle chalega).
+
+
+2️⃣ Async Event Listeners :
+           - Default me events synchronous hote hain.matlab publisher rukta hai jab tak listener ka kaam complete na ho.
+           - Async ka matlab: Background me chale, Publisher wait na kare.
+           - Use Case :
+                     - Order create hua,Email bhejna 3 sec lag raha hai,Tum nahi chahte order creation slow ho.
+           - Example :
+                    @Async
+                    @EventListener
+                    public void sendEmail(OrderCreatedEvent event) {
+                        System.out.println("Sending Email...");
+                    }
+
+3️⃣ Conditional Event Listeners :
+                 - Event aaye lekin condition true ho tab hi listener chale.
+                 - Use Case : Agar order amount > 10,000,tabhi premium email bhejna hai.
+                 - Example :
+                          @EventListener(condition = "#event.amount > 10000")
+                          public void premiumCustomerNotification(OrderCreatedEvent event) {
+                              System.out.println("Premium Email Sent");
+                          }
+
+
+4️⃣ Global Error Handling in Listeners :
+  - Problem : Agar ek listener me exception aa gaya toh baaki listeners ruk sakte hain (sync case me)
+  - Solution :
+              Custom Error Handler (Best Way for Async).
+
+              @Bean
+              public ApplicationEventMulticaster applicationEventMulticaster() {
+                  SimpleApplicationEventMulticaster multicaster =
+                          new SimpleApplicationEventMulticaster();
+
+                  multicaster.setErrorHandler(error ->
+                          System.out.println("Global Error: " + error.getMessage()));
+
+                  return multicaster;
+              }
