@@ -28,6 +28,10 @@ There are 4 major built-in approaches in spring boot :
                - uses webclient internally.
 
 
+Note:-
+this is the URL for free third party-API call :   https://jsonplaceholder.typicode.com/posts 
+
+
 
 Q1. Layerd Architecture ?
    
