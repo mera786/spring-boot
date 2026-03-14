@@ -14,6 +14,19 @@ There are 4 major built-in approaches in spring boot :
                - recommended approach
                - non blocking
                - reactive (uses project reactor)
+
+DIFFERENCE BETWEEN RESTTEMPLATE AND WEBCLIENT ?
+| Point                | RestTemplate                                      | WebClient                                               |
+| -------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| Programming Model    | **Synchronous / Blocking**                        | **Asynchronous / Non-Blocking**                         |
+| Framework            | Traditional **Spring MVC**                        | **Spring WebFlux**                                      |
+| Thread Usage         | Thread request के पूरा होने तक **block** रहता है      |     Thread **block नहीं होता**, reactive stream use होती है |
+| Return Type          | Normal Object (User, String, etc.)                | **Mono / Flux** (Reactive types)                        |
+| Future Support       | **Deprecated / Not recommended for new projects** | **Modern & recommended client**                         |
+| Reactive Programming | Support नहीं                                       |   **Reactive programming supported**                    |
+
+
+
   c. RestClient :
                - introduced in spring 6.1
                - preferred blocking client
@@ -30,6 +43,9 @@ There are 4 major built-in approaches in spring boot :
 
 Note:-
 this is the URL for free third party-API call :   https://jsonplaceholder.typicode.com/posts 
+
+
+
 
 
 
