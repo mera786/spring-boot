@@ -15,14 +15,15 @@ Q1.  Aspect Oriented Programming   :
               3️⃣ Advice :
                         - action taken by an aspect / Actual code jo execute hota hai join point pe
                         - Types:
-                                 | Advice Type       | Kab chalta hai                            |
-                                 | ----------------- | ----------------------------------------- |
-                                 | `@Before`         | Method se pehle                           |
-                                 | `@After`          | Method ke baad (always)                   |
-                                 | `@AfterReturning` | Method successfully complete hone ke baad |
-                                 | `@AfterThrowing`  | Exception aane par                        |
-                                 | `@Around`         | Method ke pehle aur baad dono             |
-                       - eg : @Before("execution(* service.*(..))")
+                                 | Advice Type       | Method Return Type | JoinPoint Type             | Purpose                       |
+                                 | ----------------- | ------------------ | -------------------------- | ----------------------------- |
+                                 | `@Before`         | `void`             | `JoinPoint` (optional)     | Method se pehle logic         |
+                                 | `@After`          | `void`             | `JoinPoint` (optional)     | Method ke baad logic          |
+                                 | `@AfterReturning` | `void`             | `JoinPoint` + return value | Successful return ke baad     |
+                                 | `@AfterThrowing`  | `void`             | `JoinPoint` + Exception    | Exception aane par            |
+                                 | `@Around`         | **Object**         | **ProceedingJoinPoint**    | Method ke pehle aur baad dono |
+
+                       - eg : @Before("execution(* service.*(..))")      <------------------ execution(* service.*(..)) :- ise AspectJ Pointcut Expression Language khte hai.
                               public void logBefore() { }
                 4️⃣ Pointcut:
                          - Rule / expression jo batata hai kaunse method pe advice lagega like, predicate to match join points.
