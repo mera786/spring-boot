@@ -1,4 +1,4 @@
-                                                             Optimistic and pessimistic locking are provided by JPA/Hibernate.
+                                                             Optimistic and pessimistic locking concept are provided by JPA and implemention done by Hibernate.
 
 1️⃣ Optimistic Locking kya hota hai?
 👉 Optimistic ka matlab = Assume karo conflict nahi hoga :
