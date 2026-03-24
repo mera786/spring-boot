@@ -22,7 +22,7 @@ Q1.  Aspect Oriented Programming   :
                                  | `@AfterReturning` | `void`             | `JoinPoint` + return value | Successful return ke baad     |
                                  | `@AfterThrowing`  | `void`             | `JoinPoint` + Exception    | Exception aane par            |
                                  | `@Around`         | **Object**         | **ProceedingJoinPoint**    | Method ke pehle aur baad dono |
-
+ 
                        - eg : @Before("execution(* service.*(..))")      <------------------ execution(* service.*(..)) :- ise AspectJ Pointcut Expression Language khte hai.
                               public void logBefore() { }
                 4️⃣ Pointcut:
