@@ -47,6 +47,31 @@ this is the URL for free third party-API call :   https://jsonplaceholder.typico
 
 
 
+🔹 Classpath kya hota hai?
+👉 Classpath = wo saari jagah (locations) jahan se Java runtime classes ko dhundta hai,
+👉 Classpath koi physical ek folder nahi hota,
+👉 Ye actually runtime pe JVM dwara banayi hui ek list hoti hai, jisme :
+✔️ .class files → classpath me hoti hain
+✔️ resources files → classpath me hoti hain 
+✔️ .m2 ke JAR folder → classpath me include hote hain (direct folder nahi, JARs),.m2 folder directly classpath nahi hota,Uske andar ke JAR files classpath me add hote hain (via Maven build)
+auto-configuration ka matlab:
+“Spring Boot, classpath check karo aur decide karo kya configure karna hai”
+Agar tum project me kuch dependency add karte ho, to Spring Boot khud samajh leta hai ki kya configure karna hai.
+🔹 Example :
+Agar tum ye dependency add karo:
+                      spring-boot-starter-web
+👉 Spring Boot automatically:
+Embedded server (Tomcat) start karega
+DispatcherServlet configure karega
+JSON support (Jackson) enable karega
+👉 Tumhe manually kuch likhne ki zarurat nahi 😎
+
+
+
+
+
+
+
 
 
 Q1. Layerd Architecture ?
